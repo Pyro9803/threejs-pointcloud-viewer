@@ -1,0 +1,5 @@
+node_modules/
+dist/
+public/tileset/*
+!public/tileset/.gitkeep
+.DS_Store

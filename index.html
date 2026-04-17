@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>3D Tiles Point Cloud Viewer</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: #1a1a2e;
+      overflow: hidden;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+    }
+
+    #canvas-container {
+      position: fixed;
+      inset: 0;
+    }
+
+    canvas {
+      display: block;
+      width: 100% !important;
+      height: 100% !important;
+    }
+
+    /* ── UI overlay ── */
+    #ui {
+      position: fixed;
+      top: 16px;
+      left: 16px;
+      z-index: 10;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      pointer-events: none;
+    }
+
+    .panel {
+      background: rgba(10, 10, 30, 0.82);
+      backdrop-filter: blur(6px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      padding: 10px 14px;
+      color: #e0e0f0;
+      font-size: 13px;
+      pointer-events: all;
+      min-width: 210px;
+    }
+
+    .panel h3 {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #8888aa;
+      margin-bottom: 8px;
+    }
+
+    .control-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-top: 6px;
+    }
+
+    .control-row label {
+      font-size: 12px;
+      color: #b0b0cc;
+      white-space: nowrap;
+    }
+
+    input[type="range"] {
+      flex: 1;
+      accent-color: #5588ff;
+      cursor: pointer;
+    }
+
+    #point-size-value {
+      font-size: 12px;
+      color: #5588ff;
+      width: 34px;
+      text-align: right;
+    }
+
+    button#bg-toggle {
+      width: 100%;
+      margin-top: 8px;
+      padding: 5px 10px;
+      background: rgba(85, 136, 255, 0.18);
+      border: 1px solid rgba(85, 136, 255, 0.4);
+      border-radius: 5px;
+      color: #99aaff;
+      font-size: 12px;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    button#bg-toggle:hover {
+      background: rgba(85, 136, 255, 0.32);
+    }
+
+    /* info panel rows */
+    .info-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      margin-top: 4px;
+      font-size: 12px;
+    }
+
+    .info-row .key {
+      color: #8888aa;
+    }
+
+    .info-row .val {
+      color: #cce0ff;
+      text-align: right;
+      word-break: break-all;
+    }
+
+    /* FPS counter */
+    #fps {
+      position: fixed;
+      top: 16px;
+      right: 16px;
+      z-index: 10;
+      background: rgba(10, 10, 30, 0.82);
+      backdrop-filter: blur(6px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      padding: 6px 12px;
+      color: #44ee88;
+      font-size: 13px;
+      font-variant-numeric: tabular-nums;
+      pointer-events: none;
+    }
+
+    /* Loading indicator */
+    #loading {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 10;
+      background: rgba(10, 10, 30, 0.9);
+      border: 1px solid rgba(85, 136, 255, 0.4);
+      border-radius: 8px;
+      padding: 8px 18px;
+      color: #99aaff;
+      font-size: 13px;
+      pointer-events: none;
+      transition: opacity 0.4s;
+    }
+
+    #loading.hidden {
+      opacity: 0;
+    }
+
+    /* Error overlay */
+    #error-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      background: rgba(0, 0, 0, 0.75);
+      align-items: center;
+      justify-content: center;
+    }
+
+    #error-overlay.visible {
+      display: flex;
+    }
+
+    #error-box {
+      background: #1e0a0a;
+      border: 1px solid #cc3333;
+      border-radius: 10px;
+      padding: 28px 36px;
+      max-width: 480px;
+      text-align: center;
+      color: #ffaaaa;
+    }
+
+    #error-box h2 {
+      font-size: 18px;
+      margin-bottom: 10px;
+      color: #ff6666;
+    }
+
+    #error-box p {
+      font-size: 14px;
+      line-height: 1.6;
+      color: #ddaaaa;
+    }
+
+    #error-box code {
+      font-size: 12px;
+      background: rgba(255,255,255,0.07);
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body>
+  <div id="canvas-container"></div>
+
+  <!-- Controls panel -->
+  <div id="ui">
+    <div class="panel" id="controls-panel">
+      <h3>Point Cloud Controls</h3>
+      <div class="control-row">
+        <label for="point-size">Point size</label>
+        <input type="range" id="point-size" min="0.01" max="0.5" step="0.01" value="0.05" />
+        <span id="point-size-value">0.05</span>
+      </div>
+      <button id="bg-toggle">Toggle background</button>
+    </div>
+
+    <div class="panel" id="info-panel">
+      <h3>Tileset Info</h3>
+      <div class="info-row">
+        <span class="key">Center</span>
+        <span class="val" id="info-center">—</span>
+      </div>
+      <div class="info-row">
+        <span class="key">Radius</span>
+        <span class="val" id="info-radius">—</span>
+      </div>
+      <div class="info-row">
+        <span class="key">Coord system</span>
+        <span class="val" id="info-coords">—</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- FPS counter -->
+  <div id="fps">-- FPS</div>
+
+  <!-- Loading indicator -->
+  <div id="loading">Loading tiles: 0 / 0</div>
+
+  <!-- Error overlay -->
+  <div id="error-overlay">
+    <div id="error-box">
+      <h2>Failed to load tileset</h2>
+      <p id="error-message">
+        Could not load <code>/tileset/tileset.json</code>.<br /><br />
+        Make sure you have placed your tileset files in
+        <code>public/tileset/</code> and that the dev server is running
+        (<code>npm run dev</code>).<br /><br />
+        <strong>Note:</strong> The tileset must be served over HTTP.
+        Opening <code>index.html</code> directly via <code>file://</code> will
+        not work due to CORS restrictions.
+      </p>
+    </div>
+  </div>
+
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,18 @@
+{
+  "name": "threejs-pointcloud-viewer",
+  "version": "1.0.0",
+  "description": "3D Tiles point cloud viewer using Three.js and 3d-tiles-renderer",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "3d-tiles-renderer": "^0.3.34",
+    "three": "^0.166.0"
+  },
+  "devDependencies": {
+    "vite": "^5.3.0"
+  }
+}
