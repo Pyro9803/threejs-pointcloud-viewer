@@ -204,6 +204,157 @@
       padding: 2px 6px;
       border-radius: 4px;
     }
+
+    /* ── Mode indicator ── */
+    #mode-indicator {
+      position: fixed;
+      top: 16px;
+      right: 110px;
+      z-index: 10;
+      background: rgba(10, 10, 30, 0.82);
+      backdrop-filter: blur(6px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      padding: 6px 12px;
+      color: #b0b0cc;
+      font-size: 13px;
+      pointer-events: none;
+    }
+
+    /* ── Enter Cave button ── */
+    #enter-cave {
+      position: fixed;
+      bottom: 70px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 10;
+      padding: 10px 24px;
+      background: rgba(85, 136, 255, 0.22);
+      border: 1px solid rgba(85, 136, 255, 0.5);
+      border-radius: 8px;
+      color: #bbccff;
+      font-size: 14px;
+      cursor: pointer;
+      transition: background 0.15s, transform 0.15s;
+    }
+
+    #enter-cave:hover {
+      background: rgba(85, 136, 255, 0.4);
+      transform: translateX(-50%) scale(1.04);
+    }
+
+    #enter-cave.hidden {
+      display: none;
+    }
+
+    /* ── Crosshair ── */
+    #crosshair {
+      display: none;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 20px;
+      height: 20px;
+      pointer-events: none;
+      z-index: 10;
+    }
+
+    #crosshair::before,
+    #crosshair::after {
+      content: '';
+      position: absolute;
+      background: rgba(255, 255, 255, 0.8);
+      border-radius: 1px;
+    }
+
+    #crosshair::before {
+      width: 100%;
+      height: 2px;
+      top: 50%;
+      transform: translateY(-50%);
+    }
+
+    #crosshair::after {
+      width: 2px;
+      height: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+
+    #crosshair.visible {
+      display: block;
+    }
+
+    /* ── Pointer lock hint ── */
+    #lock-hint {
+      display: none;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 10;
+      background: rgba(10, 10, 30, 0.9);
+      border: 1px solid rgba(85, 136, 255, 0.4);
+      border-radius: 10px;
+      padding: 18px 30px;
+      color: #bbccff;
+      font-size: 15px;
+      text-align: center;
+      pointer-events: none;
+    }
+
+    #lock-hint.visible {
+      display: block;
+    }
+
+    /* ── Controls hint (FPS mode) ── */
+    #controls-hint {
+      display: none;
+      position: fixed;
+      bottom: 24px;
+      right: 16px;
+      z-index: 10;
+      background: rgba(10, 10, 30, 0.88);
+      backdrop-filter: blur(6px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      padding: 12px 16px;
+      color: #b0b0cc;
+      font-size: 12px;
+      line-height: 1.8;
+      pointer-events: none;
+      transition: opacity 0.6s;
+    }
+
+    #controls-hint.visible {
+      display: block;
+    }
+
+    #controls-hint.fade-out {
+      opacity: 0;
+    }
+
+    #controls-hint kbd {
+      display: inline-block;
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 3px;
+      padding: 1px 5px;
+      font-size: 11px;
+      font-family: inherit;
+      color: #dde0ff;
+      min-width: 22px;
+      text-align: center;
+    }
+
+    /* ── Move speed value label ── */
+    #move-speed-value {
+      font-size: 12px;
+      color: #5588ff;
+      width: 34px;
+      text-align: right;
+    }
   </style>
 </head>
 <body>
@@ -217,6 +368,11 @@
         <label for="point-size">Point size</label>
         <input type="range" id="point-size" min="0.01" max="0.5" step="0.01" value="0.05" />
         <span id="point-size-value">0.05</span>
+      </div>
+      <div class="control-row">
+        <label for="move-speed">Move speed</label>
+        <input type="range" id="move-speed" min="0.5" max="50" step="0.5" value="5" />
+        <span id="move-speed-value">5.0</span>
       </div>
       <button id="bg-toggle">Toggle background</button>
     </div>
@@ -238,8 +394,28 @@
     </div>
   </div>
 
+  <!-- Mode indicator -->
+  <div id="mode-indicator">Orbit</div>
+
   <!-- FPS counter -->
   <div id="fps">-- FPS</div>
+
+  <!-- Enter Cave button -->
+  <button id="enter-cave">Enter Cave (E)</button>
+
+  <!-- Crosshair (FPS mode) -->
+  <div id="crosshair"></div>
+
+  <!-- Pointer lock hint -->
+  <div id="lock-hint">Click to capture mouse</div>
+
+  <!-- Controls hint (FPS mode) -->
+  <div id="controls-hint">
+    <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> &mdash; Di chuy&#7875;n<br />
+    <kbd>Mouse</kbd> &mdash; Nh&igrave;n xung quanh<br />
+    <kbd>Space</kbd> / <kbd>Shift</kbd> &mdash; L&ecirc;n / Xu&#7889;ng<br />
+    <kbd>Esc</kbd> &mdash; Tho&aacute;t
+  </div>
 
   <!-- Loading indicator -->
   <div id="loading">Loading tiles: 0 / 0</div>
