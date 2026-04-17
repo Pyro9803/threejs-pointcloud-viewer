@@ -1,5 +1,7 @@
 node_modules/
 dist/
-public/tileset/*
-!public/tileset/.gitkeep
+# Uncomment the line below to exclude tileset from git (local dev only).
+# If deploying to Vercel, the tileset must be committed so Vercel can serve it.
+# public/tileset/*
+# !public/tileset/.gitkeep
 .DS_Store
