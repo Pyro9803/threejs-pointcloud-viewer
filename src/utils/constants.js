@@ -1,4 +1,5 @@
 export const TILESET_URL = '/tileset/tileset.json';
+export const MESH_TILESET_URL = '/tileset-mesh/tileset.json';
 
 /**
  * Radius of the Earth in metres — used to detect ECEF bounding spheres.

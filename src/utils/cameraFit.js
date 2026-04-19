@@ -72,15 +72,23 @@ export function fitCameraToTileset(tilesRenderer, camera, orbitControls) {
 }
 
 /**
- * Positions the camera at the bounding sphere edge, looking toward the
- * centre. Used when entering FPS / cave explorer mode.
+ * Positions the camera at the start of the spline path.
+ * Used when entering spline explorer mode.
  *
  * @param {THREE.PerspectiveCamera} camera
+ * @param {{ isReady: () => boolean, setProgress: (t: number) => void }} splineControls
  */
-export function enterFPSPosition(camera) {
-  const { center, radius } = state.tilesetSphere;
-  if (radius <= 0) return;
+export function enterSplinePosition(camera, splineControls) {
+  if (!splineControls.isReady()) {
+    // Fallback: position at bounding sphere edge
+    const { center, radius } = state.tilesetSphere;
+    if (radius <= 0) return;
 
-  camera.position.set(center.x + radius, center.y, center.z);
-  camera.lookAt(center);
+    camera.position.set(center.x + radius, center.y, center.z);
+    camera.lookAt(center);
+    return;
+  }
+
+  // Position at start of spline path
+  splineControls.setProgress(0);
 }

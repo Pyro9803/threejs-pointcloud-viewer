@@ -161,3 +161,133 @@ button#bg-toggle:hover {
 #enter-cave.hidden {
   display: none;
 }
+
+/* ── Mesh Controls Section ── */
+
+.mesh-section {
+  margin-top: 4px;
+}
+
+.mesh-section.hidden {
+  display: none;
+}
+
+.section-divider {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.1);
+  margin: 12px 0 8px;
+}
+
+/* ── Render Mode Button Group ── */
+
+.button-group {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.mode-btn {
+  padding: 4px 8px;
+  background: rgba(85, 136, 255, 0.12);
+  border: 1px solid rgba(85, 136, 255, 0.3);
+  border-radius: 4px;
+  color: #99aaff;
+  font-size: 11px;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.mode-btn:hover {
+  background: rgba(85, 136, 255, 0.25);
+}
+
+.mode-btn.active {
+  background: rgba(85, 136, 255, 0.35);
+  border-color: rgba(85, 136, 255, 0.6);
+  color: #bbccff;
+}
+
+/* ── Checkbox Styling ── */
+
+input[type="checkbox"] {
+  accent-color: #5588ff;
+  cursor: pointer;
+  width: 16px;
+  height: 16px;
+}
+
+/* ── Mesh Opacity Value ── */
+
+#mesh-opacity-value {
+  font-size: 12px;
+  color: #5588ff;
+  width: 34px;
+  text-align: right;
+}
+
+/* ── Disabled State ── */
+
+.control-row.disabled {
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+.control-row.disabled input {
+  cursor: not-allowed;
+}
+
+/* ── Hidden State ── */
+
+.control-row.hidden {
+  display: none;
+}
+
+/* ── Explorer Section ── */
+
+.explorer-section {
+  margin-top: 4px;
+}
+
+.explorer-section.hidden {
+  display: none;
+}
+
+#spline-progress-value {
+  font-size: 12px;
+  color: #5588ff;
+  width: 34px;
+  text-align: right;
+}
+
+#explorer-speed-value {
+  font-size: 12px;
+  color: #5588ff;
+  width: 34px;
+  text-align: right;
+}
+
+/* ── Disabled Enter Cave button ── */
+
+#enter-cave:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* ── Path Editor Hint ── */
+
+#path-editor-hint {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 100;
+  background: rgba(255, 50, 50, 0.9);
+  backdrop-filter: blur(6px);
+  border-radius: 10px;
+  padding: 18px 30px;
+  color: white;
+  font-size: 14px;
+  text-align: center;
+  pointer-events: none;
+}

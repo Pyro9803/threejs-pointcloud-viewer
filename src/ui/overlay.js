@@ -10,7 +10,7 @@ import { state } from '../state.js';
  *   lockHint: HTMLElement,
  *   controlsHint: HTMLElement,
  *   showError: (html: string) => void,
- *   updateLoadingProgress: (tilesRenderer: import('3d-tiles-renderer').TilesRenderer) => void,
+ *   updateLoadingProgress: (tilesRenderers: (import('3d-tiles-renderer').TilesRenderer | null)[]) => void,
  * }}
  */
 export function createOverlay() {
@@ -25,14 +25,14 @@ export function createOverlay() {
   lockHint.textContent = 'Click to capture mouse';
   document.body.appendChild(lockHint);
 
-  // Controls hint (FPS mode)
+  // Controls hint (Spline explorer mode)
   const controlsHint = document.createElement('div');
   controlsHint.id = 'controls-hint';
   controlsHint.innerHTML =
-    '<kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> \u2014 Di chuy\u1EC3n<br />' +
-    '<kbd>Mouse</kbd> \u2014 Nh\u00ECn xung quanh<br />' +
-    '<kbd>Space</kbd> / <kbd>Shift</kbd> \u2014 L\u00EAn / Xu\u1ED1ng<br />' +
-    '<kbd>Esc</kbd> \u2014 Tho\u00E1t';
+    '<kbd>W</kbd> / <kbd>↑</kbd> — Move forward<br />' +
+    '<kbd>S</kbd> / <kbd>↓</kbd> — Move backward<br />' +
+    '<kbd>Mouse</kbd> — Look around<br />' +
+    '<kbd>Esc</kbd> — Exit';
   document.body.appendChild(controlsHint);
 
   // Loading indicator
@@ -59,16 +59,31 @@ export function createOverlay() {
     errorOverlay.classList.add('visible');
   }
 
-  function updateLoadingProgress(tilesRenderer) {
-    const stats = tilesRenderer.stats;
-    const loaded = stats.loadedTiles ?? 0;
-    const total = (stats.loadedTiles ?? 0) + (stats.loadingTiles ?? 0);
+  /**
+   * Updates loading progress from an array of tilesRenderers.
+   * Aggregates stats across all renderers.
+   *
+   * @param {(import('3d-tiles-renderer').TilesRenderer | null)[]} tilesRenderers
+   */
+  function updateLoadingProgress(tilesRenderers) {
+    let totalLoaded = 0;
+    let totalLoading = 0;
 
-    if (!state.tilesetLoaded || (stats.loadingTiles ?? 0) > 0) {
+    for (const tilesRenderer of tilesRenderers) {
+      if (tilesRenderer) {
+        const stats = tilesRenderer.stats;
+        totalLoaded += stats.loadedTiles ?? 0;
+        totalLoading += stats.loadingTiles ?? 0;
+      }
+    }
+
+    const total = totalLoaded + totalLoading;
+
+    if (!state.tilesetLoaded || totalLoading > 0) {
       if (total === 0) {
-        loading.textContent = 'Waiting for tiles\u2026';
+        loading.textContent = 'Waiting for tiles…';
       } else {
-        loading.textContent = `Loading tiles: ${loaded} / ${total}`;
+        loading.textContent = `Loading tiles: ${totalLoaded} / ${total}`;
       }
       loading.classList.remove('hidden');
     } else {

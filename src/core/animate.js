@@ -9,22 +9,26 @@ import { state } from '../state.js';
  *   renderer: THREE.WebGLRenderer,
  *   scene: THREE.Scene,
  *   camera: THREE.PerspectiveCamera,
- *   tilesRenderer: import('3d-tiles-renderer').TilesRenderer,
+ *   getTilesRenderers: () => (import('3d-tiles-renderer').TilesRenderer | null)[],
  *   orbitControls: import('three/examples/jsm/controls/OrbitControls').OrbitControls,
- *   updateMovement: (delta: number) => void,
+ *   updateRoll: (delta: number) => void,
+ *   splineUpdate: (delta: number) => void,
  *   updateFPS: () => void,
  *   updateLoadingProgress: () => void,
+ *   updateSplineProgress: () => void,
  * }} deps
  */
 export function startLoop({
   renderer,
   scene,
   camera,
-  tilesRenderer,
+  getTilesRenderers,
   orbitControls,
-  updateMovement,
+  updateRoll,
+  splineUpdate,
   updateFPS,
   updateLoadingProgress,
+  updateSplineProgress,
 }) {
   const clock = new THREE.Clock();
 
@@ -34,12 +38,18 @@ export function startLoop({
     const delta = clock.getDelta();
 
     if (state.mode === 'orbit') {
-      orbitControls.update();
-    } else {
-      updateMovement(delta);
+      updateRoll(delta); // handles roll input + orbitControls.update() + roll post-process
+    } else if (state.mode === 'spline') {
+      splineUpdate(delta);
+      updateSplineProgress();
     }
 
-    tilesRenderer.update();
+    for (const tilesRenderer of getTilesRenderers()) {
+      if (tilesRenderer) {
+        tilesRenderer.update();
+      }
+    }
+
     renderer.render(scene, camera);
 
     updateFPS();

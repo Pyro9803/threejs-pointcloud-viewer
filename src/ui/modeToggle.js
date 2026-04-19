@@ -1,20 +1,20 @@
 import * as THREE from 'three';
 import { state } from '../state.js';
-import { enterFPSPosition } from '../utils/cameraFit.js';
+import { enterSplinePosition } from '../utils/cameraFit.js';
 
 /**
- * Creates the mode indicator and "Enter Cave" button, and wires up all
+ * Creates the mode indicator and "Explore Cave" button, and wires up all
  * mode-switching logic (keyboard, click-to-lock, pointer lock events).
  *
  * @param {{
  *   camera: THREE.PerspectiveCamera,
  *   renderer: THREE.WebGLRenderer,
- *   fpsControls: import('three/examples/jsm/controls/PointerLockControls').PointerLockControls,
+ *   splineControls: import('../controls/splineControls.js').setupSpline extends (...args: any[]) => infer R ? R : never,
  *   orbitControls: import('three/examples/jsm/controls/OrbitControls').OrbitControls,
  *   overlay: { crosshair: HTMLElement, lockHint: HTMLElement, controlsHint: HTMLElement },
  * }} deps
  */
-export function createModeToggle({ camera, renderer, fpsControls, orbitControls, overlay }) {
+export function createModeToggle({ camera, renderer, splineControls, orbitControls, overlay }) {
   const { crosshair, lockHint, controlsHint } = overlay;
 
   // Mode indicator (top-right, next to FPS counter)
@@ -23,10 +23,10 @@ export function createModeToggle({ camera, renderer, fpsControls, orbitControls,
   indicator.textContent = '\ud83d\udd2d Orbit';
   document.body.appendChild(indicator);
 
-  // "Enter Cave" button (bottom-center)
+  // "Explore Cave" button (bottom-center)
   const button = document.createElement('button');
   button.id = 'enter-cave';
-  button.textContent = 'Enter Cave (E)';
+  button.textContent = 'Explore Cave (F)';
   document.body.appendChild(button);
 
   /** Shows the controls hint for 5 s then fades it out. */
@@ -38,26 +38,47 @@ export function createModeToggle({ camera, renderer, fpsControls, orbitControls,
   }
 
   /**
-   * Switches between orbit and FPS explorer modes.
-   * @param {'orbit' | 'fps'} mode
+   * Updates button state based on spline readiness.
+   */
+  function updateButtonState() {
+    if (state.splineReady) {
+      button.disabled = false;
+      button.title = '';
+    } else {
+      button.disabled = true;
+      button.title = 'Path data not available. Edit src/data/cavePath.js or use Shift+P to create a path.';
+    }
+  }
+
+  /**
+   * Switches between orbit and spline explorer modes.
+   * @param {'orbit' | 'spline'} mode
    */
   function setMode(mode) {
     state.mode = mode;
 
-    if (mode === 'fps') {
+    if (mode === 'spline') {
+      if (!state.splineReady) {
+        console.warn('[modeToggle] Cannot enter spline mode: path not ready');
+        return;
+      }
+
       orbitControls.enabled = false;
       button.classList.add('hidden');
       indicator.textContent = '\ud83d\udeb6 Explorer';
 
-      enterFPSPosition(camera);
+      enterSplinePosition(camera, splineControls);
       lockHint.classList.add('visible');
       showControlsHint();
+
+      // Dispatch mode change event
+      document.dispatchEvent(new CustomEvent('mode-change', { detail: { mode } }));
     } else {
       orbitControls.enabled = true;
       button.classList.remove('hidden');
       indicator.textContent = '\ud83d\udd2d Orbit';
 
-      if (fpsControls.isLocked) fpsControls.unlock();
+      if (splineControls.isLocked) splineControls.unlock();
       lockHint.classList.remove('visible');
       crosshair.classList.remove('visible');
       controlsHint.classList.remove('visible');
@@ -69,38 +90,55 @@ export function createModeToggle({ camera, renderer, fpsControls, orbitControls,
         .copy(camera.position)
         .addScaledVector(forward, state.tilesetSphere.radius || 10);
       orbitControls.update();
+
+      // Dispatch mode change event
+      document.dispatchEvent(new CustomEvent('mode-change', { detail: { mode } }));
     }
+
+    updateButtonState();
   }
 
   // ── Event listeners ──────────────────────────────────────────────────
 
-  // Pointer lock / unlock
-  fpsControls.addEventListener('lock', () => {
-    lockHint.classList.remove('visible');
-    crosshair.classList.add('visible');
-  });
-
-  fpsControls.addEventListener('unlock', () => {
-    crosshair.classList.remove('visible');
-    if (state.mode === 'fps') {
-      setMode('orbit');
+  // Pointer lock change
+  document.addEventListener('pointerlockchange', () => {
+    if (document.pointerLockElement === renderer.domElement) {
+      lockHint.classList.remove('visible');
+      crosshair.classList.add('visible');
+    } else {
+      crosshair.classList.remove('visible');
+      if (state.mode === 'spline') {
+        setMode('orbit');
+      }
     }
   });
 
-  // "Enter Cave" button
-  button.addEventListener('click', () => setMode('fps'));
+  // "Explore Cave" button
+  button.addEventListener('click', () => {
+    if (state.splineReady) {
+      setMode('spline');
+    }
+  });
 
-  // Press E to enter FPS mode
+  // Press F to enter spline mode
   document.addEventListener('keydown', (e) => {
-    if (e.code === 'KeyE' && state.mode === 'orbit') {
-      setMode('fps');
+    if (e.code === 'KeyF' && state.mode === 'orbit' && state.splineReady) {
+      setMode('spline');
     }
   });
 
-  // Click canvas to lock pointer when in FPS mode
+  // Click canvas to lock pointer when in spline mode
   renderer.domElement.addEventListener('click', () => {
-    if (state.mode === 'fps' && !fpsControls.isLocked) {
-      fpsControls.lock();
+    if (state.mode === 'spline' && !splineControls.isLocked) {
+      splineControls.lock();
     }
   });
+
+  // Listen for spline ready state changes
+  document.addEventListener('spline-ready', () => {
+    updateButtonState();
+  });
+
+  // Initial button state
+  updateButtonState();
 }

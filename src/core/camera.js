@@ -24,15 +24,20 @@ export function createCamera(container) {
  * @param {HTMLElement} container
  * @param {THREE.PerspectiveCamera} camera
  * @param {THREE.WebGLRenderer} renderer
- * @param {import('3d-tiles-renderer').TilesRenderer} tilesRenderer
+ * @param {() => (import('3d-tiles-renderer').TilesRenderer | null)[]} getTilesRenderers
  */
-export function setupResize(container, camera, renderer, tilesRenderer) {
+export function setupResize(container, camera, renderer, getTilesRenderers) {
   window.addEventListener('resize', () => {
     const w = container.clientWidth;
     const h = container.clientHeight;
     camera.aspect = w / h;
     camera.updateProjectionMatrix();
     renderer.setSize(w, h);
-    tilesRenderer.setResolutionFromRenderer(camera, renderer);
+
+    for (const tilesRenderer of getTilesRenderers()) {
+      if (tilesRenderer) {
+        tilesRenderer.setResolutionFromRenderer(camera, renderer);
+      }
+    }
   });
 }
